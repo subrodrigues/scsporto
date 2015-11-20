@@ -8,6 +8,7 @@ import pink.instagram.fetchserver.models.Image;
  *
  * Created by filiperodrigues on 20/11/15.
  */
+@Deprecated
 public class ImageResponse {
     private Pagination pagination = null;
     private Image[] data = null;

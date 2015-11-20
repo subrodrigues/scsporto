@@ -7,8 +7,6 @@ package pink.instagram.fetchserver.variables;
  */
 public class Variables {
 
-    // https://api.instagram.com/v1/tags/media/recent?client_id=bc24f77d7c304e93badf0c01073f6df9&count=20
-
     /**
      * Instagram related variables
      */

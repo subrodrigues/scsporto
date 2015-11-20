@@ -1,9 +1,7 @@
 package pink.instagram.fetchserver;
 
-import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
@@ -16,24 +14,17 @@ import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
 
-import com.squareup.picasso.Picasso;
-import com.squareup.picasso.Target;
-
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.util.Timer;
-import java.util.TimerTask;
 import java.util.Vector;
 
 import pink.instagram.fetchserver.instagram.ImageResponse;
 import pink.instagram.fetchserver.instagram.InstagramAPI;
-import pink.instagram.fetchserver.models.CustomPicassoTarget;
 import pink.instagram.fetchserver.models.Image;
-import pink.instagram.fetchserver.utils.Utils;
 import pink.instagram.fetchserver.variables.Variables;
 
 /**
@@ -176,10 +167,10 @@ public class MainActivity extends AppCompatActivity {
 
         new DownloadFilesAndSaveToCardTask(images, 0).execute(0);
 
-        if(imageNumber == (images.length-1)){ // If we reached the end of page, load next images
+     /*   if(imageNumber == (images.length-1)){ // If we reached the end of page, load next images
             // Todo save images from another page
         }
-
+        */
     }
 
     private class DownloadFilesAndSaveToCardTask extends AsyncTask<Integer, Integer, Bitmap> {

@@ -22,6 +22,7 @@ import pink.instagram.fetchserver.variables.Variables;
  *
  * Created by filiperodrigues on 20/11/15.
  */
+@Deprecated
 public class InstagramAPI {
     private String format = "json";
 

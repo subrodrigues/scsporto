@@ -16,6 +16,7 @@ import pink.instagram.fetchserver.MainActivity;
 /**
  * Created by filiperodrigues on 20/11/15.
  */
+@Deprecated
 public class CustomPicassoTarget implements Target {
 
     private int imageNumber = 0;
