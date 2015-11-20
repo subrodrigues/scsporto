@@ -37,16 +37,14 @@ public class MainActivity extends AppCompatActivity {
      */
     private Vector<ImageResponse> instagramImageResponse = null;
     private int paginationIndex = 0;
-    private MainActivity activity;
 
+    // TODO: change uploadedImageIDs and imageNumber for a sharedpreferences data thing
     private static Vector<String> uploadedImageIDs = null; // TODO: save and load from preferences onStop/onResume
     public static int imageNumber = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-        activity = this;
 
         setContentView(R.layout.activity_main);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
