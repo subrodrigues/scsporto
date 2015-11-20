@@ -210,17 +210,27 @@ public class MainActivity extends AppCompatActivity {
 
             try {
                 // Save Photo to sdcard
-                File file = new File(Environment.getExternalStorageDirectory().getPath() + "/scsporto/saved" + imageNumber + ".jpg");
+                File folder = new File(Environment.getExternalStorageDirectory().getPath() + "/scsporto");
+                boolean success = true;
+                if (!folder.exists()) {
+                    success = folder.mkdir();
+                }
+                if (success) {
+                    // Do something on success
+                    File file = new File(folder.getAbsolutePath() +"/saved" + imageNumber + ".jpg");
+                    file.createNewFile();
+                    FileOutputStream ostream = new FileOutputStream(file);
+                    result.compress(Bitmap.CompressFormat.JPEG, 100, ostream);
+                    ostream.close();
 
-                file.createNewFile();
-                FileOutputStream ostream = new FileOutputStream(file);
-                result.compress(Bitmap.CompressFormat.JPEG, 100, ostream);
-                ostream.close();
+                    MainActivity.getUploadedImageIDs().add(images[index].getId());
+                    Log.e("Image saved", "With SUCCESS at " + file.getAbsolutePath());
 
-                MainActivity.getUploadedImageIDs().add(images[index].getId());
-                Log.e("Image saved", "With SUCCESS at " + file.getAbsolutePath());
+                    imageNumber++;
+                } else {
+                    // TODO: deal with folder creation error
+                }
 
-                imageNumber++;
             }
             catch (Exception e) {
                 e.printStackTrace();
