@@ -10,6 +10,7 @@ android {
         targetSdkVersion 23
         versionCode 1
         versionName "1.0"
+        multiDexEnabled true
     }
     buildTypes {
         release {
@@ -18,17 +19,36 @@ android {
         }
     }
 
+    packagingOptions {
+        exclude 'META-INF/LICENSE.txt'
+        exclude 'META-INF/NOTICE.txt'
+    }
+
     useLibrary 'org.apache.http.legacy'
 
 }
 
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
-    testCompile 'junit:junit:4.12'
-    compile 'com.android.support:support-v4:21.0.2'
-    compile 'com.android.support:support-v13:21.0.2'
+    testCompile 'junit:junit:4.8.2'
+    compile 'com.android.support:support-v4:23.1.0'
+    compile 'com.android.support:support-v13:23.1.0'
     compile 'com.android.support:appcompat-v7:23.1.0'
     compile 'com.android.support:design:23.1.0'
     compile 'com.squareup.picasso:picasso:2.5.2'
     compile 'com.google.code.gson:gson:2.2.3'
+    compile 'org.slf4j:slf4j-android:1.6.1-RC1'
+    compile 'com.google.android.gms:play-services:3.1.36'
+    compile 'com.google.gdata:core:1.47.1'
+    compile('com.google.api-client:google-api-client:1.16.0-rc') {
+        // Exclude artifacts that the Android SDK provides.
+        exclude(group: 'xpp3', module: 'xpp3') //by both name and group
+        exclude(group: 'org.apache.httpcomponents', module: 'httpclient') //by both name and group
+        exclude(group: 'junit', module: 'junit') //by both name and group
+        exclude(group: 'com.google.android', module: 'android') //by both name and group
+    }
+    compile('com.google.api-client:google-api-client-android:1.16.0-rc') {
+        exclude(group: 'com.google.android.google-play-services', module: 'google-play-services')
+    }
+    compile 'com.android.support:multidex:1.0.0'
 }
