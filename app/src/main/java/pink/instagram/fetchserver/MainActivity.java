@@ -134,10 +134,11 @@ public class MainActivity extends AppCompatActivity {
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(final View view) {
-                Snackbar.make(view, "Fetching Instragram Server", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
-
                 if (!isRunning) {
+                    Snackbar.make(view, "Fetching Instragram Server", Snackbar.LENGTH_LONG)
+                            .setAction("Action", null).show();
+                    printLog(LOGTYPE.INFO, "Server started");
+
                     TimerTask task = new TimerTask() {
                         public void run() {
                             if(!NetworkUtils.isConnected(MainActivity.this)) {
@@ -157,6 +158,7 @@ public class MainActivity extends AppCompatActivity {
                     timer.cancel();
                     Snackbar.make(view, "Instragram Server Stopped", Snackbar.LENGTH_LONG)
                             .setAction("Action", null).show();
+                    printLog(LOGTYPE.INFO, "Server stopped");
                 }
 
      /*           final Handler handler = new Handler();
