@@ -51,6 +51,7 @@ import java.util.logging.Logger;
 import pink.instagram.fetchserver.instagram.ImageResponse;
 import pink.instagram.fetchserver.instagram.InstagramAPI;
 import pink.instagram.fetchserver.models.Image;
+import pink.instagram.fetchserver.tinydb.TinyDB;
 import pink.instagram.fetchserver.variables.Variables;
 
 /**
@@ -58,7 +59,7 @@ import pink.instagram.fetchserver.variables.Variables;
  */
 public class MainActivity extends AppCompatActivity {
 
-    public static final int INSTAGRAM_QUERY_PERIOD = 10000;
+    public static final int INSTAGRAM_QUERY_PERIOD = 30000;
     /**
      * Represents a response from Instagram API
      */
@@ -84,6 +85,7 @@ public class MainActivity extends AppCompatActivity {
     private static final String ALBUM_PREFIX = "/albumid/";
 
     private static final String ALBUM_TO_UPLOAD = "Album de Testes";
+    private AlbumEntry album = null;
 
     PicasawebService picasaService;
     Button selectAccount;
@@ -91,6 +93,9 @@ public class MainActivity extends AppCompatActivity {
     Account[] list;
     String selectedAccountName;
     Account selectedAccount;
+
+    //DB
+    TinyDB tinydb = null;
 
     /**
      * Picasa things
@@ -101,6 +106,8 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
 
         folder = new File(Environment.getExternalStorageDirectory().getPath() + "/scsporto");
+
+        tinydb = new TinyDB(this);
 
         setContentView(R.layout.activity_main);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
@@ -220,10 +227,13 @@ public class MainActivity extends AppCompatActivity {
 
                 loadImagesAndSaveToDisk(instagramImageResponse.get(paginationIndex).getImages());
 
-                if(!getUploadedImageIDs().contains( // If last item is not added, get next page
+            /*    if(!getUploadedImageIDs().contains( // If last item is not added, get next page
                         instagramImageResponse.get(paginationIndex).getImages()[instagramImageResponse.get(paginationIndex).getImages().length-1]) &&
                         instagramImageResponse.get(paginationIndex).getPagination().getNextURL() != null){
-
+               */
+                // If last item is not added, get next page
+                if(tinydb.getString(instagramImageResponse.get(paginationIndex).getImages()[instagramImageResponse.get(paginationIndex).getImages().length-1].getId()).isEmpty() &&
+                        instagramImageResponse.get(paginationIndex).getPagination().getNextURL() != null){
                     new GetNextImagesInstagram().execute(instagramImageResponse.get(paginationIndex).getPagination().getNextURL());
                 }
 
@@ -255,8 +265,11 @@ public class MainActivity extends AppCompatActivity {
 
                 loadImagesAndSaveToDisk(instagramImageResponse.get(paginationIndex).getImages());
 
-                if(!getUploadedImageIDs().contains( // If last item is not added, get next page
-                        instagramImageResponse.get(paginationIndex).getImages()[instagramImageResponse.get(paginationIndex).getImages().length-1])){
+           //     if(!getUploadedImageIDs().contains( // If last item is not added, get next page
+           //             instagramImageResponse.get(paginationIndex).getImages()[instagramImageResponse.get(paginationIndex).getImages().length-1])){
+
+                // If last item is not added, get next page
+                    if(tinydb.getString(instagramImageResponse.get(paginationIndex).getImages()[instagramImageResponse.get(paginationIndex).getImages().length-1].getId()).isEmpty()){
 
                     new GetNextImagesInstagram().execute(instagramImageResponse.get(paginationIndex).getPagination().getNextURL());
                 }
@@ -291,17 +304,53 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         protected Bitmap doInBackground(Integer... index) {
-            if(MainActivity.getUploadedImageIDs().contains(images[index[0]].getId())){
+        //    if(MainActivity.getUploadedImageIDs().contains(images[index[0]].getId())){
+            if(!tinydb.getString(images[index[0]].getId()).isEmpty()){
                 this.cancel(true);
             }
             else {
                 try {
+                    Log.e("IMAGE URL", images[index[0]].getURLs().getStandardResolution().getURL());
+
                     URL url = new URL(images[index[0]].getURLs().getStandardResolution().getURL());
                     HttpURLConnection connection = (HttpURLConnection) url.openConnection();
                     connection.setDoInput(true);
                     connection.connect();
                     InputStream input = connection.getInputStream();
                     Bitmap myBitmap = BitmapFactory.decodeStream(input);
+
+                    try {
+                        // Save Photo to sdcard
+                        //    File folder = new File(Environment.getExternalStorageDirectory().getPath() + "/scsporto");
+                        boolean success = true;
+                        if (!folder.exists()) {
+                            success = folder.mkdir();
+                        }
+                        if (success) {
+                            // Do something on success
+                            File file = new File(folder.getAbsolutePath() +"/saved" + imageNumber + ".jpg");
+                            file.createNewFile();
+                            FileOutputStream ostream = new FileOutputStream(file);
+                            myBitmap.compress(Bitmap.CompressFormat.JPEG, 100, ostream);
+                            ostream.close();
+
+                            uploadAndDeletePhoto(album, file);
+
+                            //   MainActivity.getUploadedImageIDs().add(images[index].getId());
+                            tinydb.putString(images[this.index].getId(), images[this.index].getId());
+
+                            Log.e("Image saved", "With SUCCESS at " + file.getAbsolutePath());
+
+                            imageNumber++;
+                        } else {
+                            // TODO: deal with folder creation error
+                        }
+
+                    }
+                    catch (Exception e) {
+                        e.printStackTrace();
+                    }
+
                     return myBitmap;
                 } catch (IOException e) {
                     // Log exception
@@ -314,33 +363,6 @@ public class MainActivity extends AppCompatActivity {
 
         protected void onPostExecute(Bitmap result) {
 
-            try {
-                // Save Photo to sdcard
-            //    File folder = new File(Environment.getExternalStorageDirectory().getPath() + "/scsporto");
-                boolean success = true;
-                if (!folder.exists()) {
-                    success = folder.mkdir();
-                }
-                if (success) {
-                    // Do something on success
-                    File file = new File(folder.getAbsolutePath() +"/saved" + imageNumber + ".jpg");
-                    file.createNewFile();
-                    FileOutputStream ostream = new FileOutputStream(file);
-                    result.compress(Bitmap.CompressFormat.JPEG, 100, ostream);
-                    ostream.close();
-
-                    MainActivity.getUploadedImageIDs().add(images[index].getId());
-                    Log.e("Image saved", "With SUCCESS at " + file.getAbsolutePath());
-
-                    imageNumber++;
-                } else {
-                    // TODO: deal with folder creation error
-                }
-
-            }
-            catch (Exception e) {
-                e.printStackTrace();
-            }
 
             if(result != null && index < (images.length-1)){
                 index++;
@@ -479,15 +501,15 @@ public class MainActivity extends AppCompatActivity {
                                     Log.e("Album {} ", myAlbum.getTitle().getPlainText());
 
                                     if(myAlbum.getTitle().getPlainText().equals(ALBUM_TO_UPLOAD)) {
+                                        album = myAlbum;
+
                                         ArrayList<File> localPhotos = getListFiles(folder);
 
                                         for (File photoFile : localPhotos) {
                                             if(!isPictureMimeType(photoFile)) continue;
 
                                             try {
-                                                PhotoEntry entry = uploadPhoto(selectedAccountName, myAlbum.getGphotoId(), photoFile);
-                                                boolean isDeleted = photoFile.delete();
-                                                Log.e("Uploaded {} ", entry.getId() + " and original file deleted (" + isDeleted + ")");
+                                                uploadAndDeletePhoto(myAlbum, photoFile);
                                             } catch (Exception ex) {
                                                 ex.printStackTrace();
                                             }
@@ -524,6 +546,12 @@ public class MainActivity extends AppCompatActivity {
                 e.printStackTrace();
             }
         }
+    }
+
+    private void uploadAndDeletePhoto(AlbumEntry myAlbum, File photoFile) throws IOException, ServiceException {
+        PhotoEntry entry = uploadPhoto(selectedAccountName, myAlbum.getGphotoId(), photoFile);
+        boolean isDeleted = photoFile.delete();
+        Log.e("Uploaded {} ", entry.getId() + " and original file deleted (" + isDeleted + ")");
     }
 
     private static String getMimeTypeFromFile(File file){
