@@ -11,17 +11,21 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
-import android.os.Handler;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.text.SpannableString;
+import android.text.Spanned;
+import android.text.method.ScrollingMovementMethod;
+import android.text.style.ForegroundColorSpan;
 import android.util.Log;
-import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.webkit.MimeTypeMap;
 import android.widget.Button;
+import android.widget.TextView;
 
 import com.google.android.gms.common.AccountPicker;
 import com.google.gdata.client.photos.PicasawebService;
@@ -46,7 +50,6 @@ import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.Vector;
-import java.util.logging.Logger;
 
 import pink.instagram.fetchserver.instagram.ImageResponse;
 import pink.instagram.fetchserver.instagram.InstagramAPI;
@@ -92,6 +95,7 @@ public class MainActivity extends AppCompatActivity {
     private AlbumEntry album = null;
 
     PicasawebService picasaService;
+    TextView txtLogger;
     Button selectAccount;
     AccountManager am;
     Account[] list;
@@ -101,6 +105,9 @@ public class MainActivity extends AppCompatActivity {
     //DB
     TinyDB tinydb = null;
     private FirebaseUtil firebaseUtil;
+    private enum LOGTYPE {
+        ERROR, INFO, WARN, DEBUG, VERBOSE
+    }
 
     /**
      * Picasa things
@@ -134,7 +141,7 @@ public class MainActivity extends AppCompatActivity {
                     TimerTask task = new TimerTask() {
                         public void run() {
                             if(!NetworkUtils.isConnected(MainActivity.this)) {
-                                Log.e(TAG, "Cannot refresh data with no connectivity. Will try again in " + INSTAGRAM_QUERY_PERIOD + " milliseconds.");
+                                printLog(LOGTYPE.ERROR, "Cannot refresh data with no connectivity. Will try again in " + INSTAGRAM_QUERY_PERIOD + " milliseconds.");
                                 Snackbar.make(view, "No connectivity available to fetch Instagram.", Snackbar.LENGTH_LONG).show();
                                 return;
                             }
@@ -177,14 +184,17 @@ public class MainActivity extends AppCompatActivity {
         // Picasa things
         am = (AccountManager) getSystemService(ACCOUNT_SERVICE);
 
+        txtLogger = (TextView) findViewById(R.id.loggerText);
+        txtLogger.setMovementMethod(new ScrollingMovementMethod());
+
         selectAccount = (Button) findViewById(R.id.selectAccount);
         selectAccount.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 list = am.getAccounts();
-                Log.e("Got {} accounts", list.length + "");
+                printLog(LOGTYPE.INFO, "Got {} accounts" + list.length);
                 for (Account a : list) {
-                    Log.e("{} {}", a.name + " " + a.type);
+                    printLog(LOGTYPE.INFO, "{} {}" + a.name + " " + a.type);
                 }
 
                 Intent intent = AccountPicker.newChooseAccountIntent(null, null, new String[]{"com.google"},
@@ -235,7 +245,7 @@ public class MainActivity extends AppCompatActivity {
 
             if(result.getMeta().getCode() == 200) {
             //    Log.d("NEXT URL:", instagramImageResponse.get(paginationIndex).getPagination().getNextURL());
-                Log.d("NUMBER OF IMAGES", instagramImageResponse.get(paginationIndex).getImages().length + "");
+                printLog(LOGTYPE.DEBUG, "NUMBER OF IMAGES: " + instagramImageResponse.get(paginationIndex).getImages().length);
 
                 loadImagesAndSaveToDisk(instagramImageResponse.get(paginationIndex).getImages());
 
@@ -250,7 +260,7 @@ public class MainActivity extends AppCompatActivity {
                 }
 
             } else {
-                Log.d("NULL", "FRAG");
+                printLog(LOGTYPE.DEBUG, "NULL FRAG");
                 // TODO: deal with it
             }
         }
@@ -288,7 +298,7 @@ public class MainActivity extends AppCompatActivity {
 
             }
             else {
-                Log.d("NULL", "FRAG");
+                printLog(LOGTYPE.DEBUG, "NULL FRAG");
                 // TODO: deal with it
             }
         }
@@ -318,7 +328,7 @@ public class MainActivity extends AppCompatActivity {
             }
             else {
                 try {
-                    Log.e("IMAGE URL", images[index[0]].getURLs().getStandardResolution().getURL());
+                    printLog(LOGTYPE.DEBUG, "IMAGE URL: " + images[index[0]].getURLs().getStandardResolution().getURL());
 
                     URL url = new URL(images[index[0]].getURLs().getStandardResolution().getURL());
                     HttpURLConnection connection = (HttpURLConnection) url.openConnection();
@@ -351,7 +361,7 @@ public class MainActivity extends AppCompatActivity {
                             tinydb.putString(images[this.index].getId(), images[this.index].getId());
                             uploadNewImageInfo(images[this.index]);
 
-                            Log.e("Image saved", "With SUCCESS at " + file.getAbsolutePath());
+                            printLog(LOGTYPE.DEBUG, "Image saved with SUCCESS at " + file.getAbsolutePath());
 
                             imageNumber++;
 
@@ -376,8 +386,6 @@ public class MainActivity extends AppCompatActivity {
         }
 
         protected void onPostExecute(Bitmap result) {
-
-
             if(result != null && index < (images.length-1)){
                 index++;
                 new DownloadFilesAndSaveToCardTask(images, index).execute(index);
@@ -411,7 +419,7 @@ public class MainActivity extends AppCompatActivity {
             case PICK_ACCOUNT_REQUEST:
                 if (resultCode == RESULT_OK) {
                     String accountName = data.getStringExtra(AccountManager.KEY_ACCOUNT_NAME);
-                //    LOG.debug("Selected Account {}", accountName);
+                    printLog(LOGTYPE.VERBOSE, "Selected Account {}: " + accountName);
                     selectedAccount =  null;
                     for (Account a:list) {
                         if (a.name.equals(accountName)) {
@@ -446,7 +454,7 @@ public class MainActivity extends AppCompatActivity {
 
     public <T extends GphotoFeed> T getFeed(String feedHref,
                                             Class<T> feedClass) throws IOException, ServiceException {
-        Log.e("Feed", "Get Feed URL: " + feedHref);
+        printLog(LOGTYPE.ERROR, "Feed -> Get Feed URL: " + feedHref);
         return picasaService.getFeed(new URL(feedHref), feedClass);
     }
 
@@ -460,7 +468,7 @@ public class MainActivity extends AppCompatActivity {
         List<AlbumEntry> albums = new ArrayList<AlbumEntry>();
         for (GphotoEntry entry : entries) {
             AlbumEntry ae = new AlbumEntry(entry);
-            Log.e("Album name {}",ae.getName());
+            printLog(LOGTYPE.ERROR, "Album name {}" + ae.getName());
             albums.add(ae);
         }
 
@@ -475,7 +483,7 @@ public class MainActivity extends AppCompatActivity {
             PhotoEntry pe = new PhotoEntry(entry);
             photos.add(pe);
         }
-        Log.e("Album {} has {} photos", album.getName()+ photos.size()+"");
+        printLog(LOGTYPE.ERROR, "Album {} has {} photos" + album.getName()+ photos.size());
         return photos;
     }
 
@@ -507,7 +515,7 @@ public class MainActivity extends AppCompatActivity {
 
                 if (b.containsKey(AccountManager.KEY_AUTHTOKEN)) {
                     final String authToken = b.getString(AccountManager.KEY_AUTHTOKEN);
-                    Log.e("Auth token {}", authToken);
+                    printLog(LOGTYPE.WARN, "Auth token {} " + authToken);
                     picasaService = new PicasawebService("pictureframe");
                     picasaService.setUserToken(authToken);
 
@@ -518,9 +526,9 @@ public class MainActivity extends AppCompatActivity {
                             try {
 
                                 albums = getAlbums(selectedAccountName);
-                                Log.e("Got {} albums", albums.size()+"");
+                                printLog(LOGTYPE.DEBUG, "Got {} albums " + albums.size());
                                 for (AlbumEntry myAlbum : albums) {
-                                    Log.e("Album {} ", myAlbum.getTitle().getPlainText());
+                                    printLog(LOGTYPE.DEBUG, "Album {} " + myAlbum.getTitle().getPlainText());
 
                                     if(myAlbum.getTitle().getPlainText().equals(ALBUM_TO_UPLOAD)) {
                                         album = myAlbum;
@@ -549,7 +557,7 @@ public class MainActivity extends AppCompatActivity {
                                 return bmp;*/
                                 return null;
                             } catch (ServiceForbiddenException e) {
-                                Log.e("ERROR", "Token expired, invalidating");
+                                printLog(LOGTYPE.ERROR, "Token expired, invalidating");
                                 am.invalidateAuthToken("com.google", authToken);
                             } catch (IOException e) {
                                 e.printStackTrace();
@@ -573,7 +581,7 @@ public class MainActivity extends AppCompatActivity {
     private void uploadAndDeletePhoto(AlbumEntry myAlbum, File photoFile) throws IOException, ServiceException {
         PhotoEntry entry = uploadPhoto(selectedAccountName, myAlbum.getGphotoId(), photoFile);
         boolean isDeleted = photoFile.delete();
-        Log.e("Uploaded {} ", entry.getId() + " and original file deleted (" + isDeleted + ")");
+        printLog(LOGTYPE.ERROR, "Uploaded {} " + entry.getId() + " and original file deleted (" + isDeleted + ")");
     }
 
     private static String getMimeTypeFromFile(File file){
@@ -612,4 +620,54 @@ public class MainActivity extends AppCompatActivity {
         return inFiles;
     }
 
+    private void printLog(LOGTYPE type, String text) {
+        int textColor;
+        switch (type) {
+            case ERROR:
+                Log.e(TAG, text);
+                textColor = android.R.color.holo_red_dark;
+                break;
+            case INFO:
+                Log.i(TAG, text);
+                textColor = android.R.color.holo_green_dark;
+                break;
+            case DEBUG:
+                Log.d(TAG, text);
+                textColor = android.R.color.holo_blue_dark;
+                break;
+            case WARN:
+                Log.w(TAG, text);
+                textColor = R.color.yellow;
+                break;
+            case VERBOSE:
+            default:
+                Log.w(TAG, text);
+                textColor = android.R.color.black;
+        }
+
+        SpannableString curText = (SpannableString) txtLogger.getText();
+        ForegroundColorSpan[] colorSpans = curText.getSpans(0, curText.length(), ForegroundColorSpan.class);
+        final SpannableString span = new SpannableString(curText.toString().concat("\n").concat(text));
+        span.setSpan(new ForegroundColorSpan(getResources().getColor(textColor)), span.length() - text.length(), span.length(), Spanned.SPAN_INCLUSIVE_INCLUSIVE);
+        for (ForegroundColorSpan colorSpan : colorSpans) {
+            int spanStart = curText.getSpanStart(colorSpan);
+            int spanEnd = curText.getSpanEnd(colorSpan);
+            span.setSpan(colorSpan, spanStart, spanEnd, Spanned.SPAN_INCLUSIVE_INCLUSIVE);
+        }
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                txtLogger.setText(span);
+                scrollToBottom(txtLogger);
+            }
+        });
+    }
+
+    private void scrollToBottom(TextView txt) {
+        final int scrollAmount = txt.getLayout().getLineTop(txt.getLineCount()) - txt.getHeight();
+        if (scrollAmount > 0)
+            txt.scrollTo(0, scrollAmount);
+        else
+            txt.scrollTo(0, 0);
+    }
 }
