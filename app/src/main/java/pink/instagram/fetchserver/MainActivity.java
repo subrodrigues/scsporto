@@ -52,6 +52,7 @@ import pink.instagram.fetchserver.instagram.ImageResponse;
 import pink.instagram.fetchserver.instagram.InstagramAPI;
 import pink.instagram.fetchserver.models.Image;
 import pink.instagram.fetchserver.tinydb.TinyDB;
+import pink.instagram.fetchserver.utils.FirebaseUtil;
 import pink.instagram.fetchserver.utils.NetworkUtils;
 import pink.instagram.fetchserver.variables.Variables;
 
@@ -99,6 +100,7 @@ public class MainActivity extends AppCompatActivity {
 
     //DB
     TinyDB tinydb = null;
+    private FirebaseUtil firebaseUtil;
 
     /**
      * Picasa things
@@ -110,6 +112,7 @@ public class MainActivity extends AppCompatActivity {
 
         folder = new File(Environment.getExternalStorageDirectory().getPath() + "/scsporto");
 
+        firebaseUtil = FirebaseUtil.getInstance(this.getApplicationContext());
         tinydb = new TinyDB(this);
 
         setContentView(R.layout.activity_main);
@@ -346,6 +349,7 @@ public class MainActivity extends AppCompatActivity {
 
                             //   MainActivity.getUploadedImageIDs().add(images[index].getId());
                             tinydb.putString(images[this.index].getId(), images[this.index].getId());
+                            uploadNewImageInfo(images[this.index]);
 
                             Log.e("Image saved", "With SUCCESS at " + file.getAbsolutePath());
 
@@ -379,6 +383,14 @@ public class MainActivity extends AppCompatActivity {
                 new DownloadFilesAndSaveToCardTask(images, index).execute(index);
             }
         }
+    }
+
+    private void uploadNewImageInfo(Image image) {
+        if(image != null && image.getCaption() != null && image.getCaption().getFrom() != null &&
+                image.getCaption().getFrom().getUsername() != null &&
+                image.getURLs() != null && image.getURLs().getStandardResolution() != null &&
+                image.getURLs().getStandardResolution().getURL() != null)
+            firebaseUtil.addUserphoto(image.getCaption().getFrom().getUsername(), image.getURLs().getStandardResolution().getURL());
     }
 
     public static Vector<String> getUploadedImageIDs() {

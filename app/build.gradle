@@ -39,6 +39,7 @@ dependencies {
     compile 'com.google.code.gson:gson:2.2.3'
     compile 'org.slf4j:slf4j-android:1.6.1-RC1'
     compile 'com.google.android.gms:play-services:3.1.36'
+    compile 'com.firebase:firebase-client-android:2.4.0'
     compile 'com.google.gdata:core:1.47.1'
     compile('com.google.api-client:google-api-client:1.16.0-rc') {
         // Exclude artifacts that the Android SDK provides.
