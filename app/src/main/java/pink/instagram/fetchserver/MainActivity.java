@@ -71,7 +71,7 @@ public class MainActivity extends AppCompatActivity {
 
     // TODO: change uploadedImageIDs and imageNumber for a sharedpreferences data thing
     private static Vector<String> uploadedImageIDs = null; // TODO: save and load from preferences onStop/onResume
-    public static int imageNumber = 0;
+ //   public static int imageNumber = 0;
 
     private Timer timer = null;
     private boolean isRunning = false;
@@ -295,10 +295,6 @@ public class MainActivity extends AppCompatActivity {
 
         new DownloadFilesAndSaveToCardTask(images, 0).execute(0);
 
-     /*   if(imageNumber == (images.length-1)){ // If we reached the end of page, load next images
-            // Todo save images from another page
-        }
-        */
     }
 
     private class DownloadFilesAndSaveToCardTask extends AsyncTask<Integer, Integer, Bitmap> {
@@ -336,6 +332,9 @@ public class MainActivity extends AppCompatActivity {
                             success = folder.mkdir();
                         }
                         if (success) {
+
+                            int imageNumber = tinydb.getInt("imageNumber"); // if no imagenumber gets index 0
+
                             // Do something on success
                             File file = new File(folder.getAbsolutePath() +"/saved" + imageNumber + ".jpg");
                             file.createNewFile();
@@ -351,6 +350,8 @@ public class MainActivity extends AppCompatActivity {
                             Log.e("Image saved", "With SUCCESS at " + file.getAbsolutePath());
 
                             imageNumber++;
+
+                            tinydb.putInt("imageNumber", imageNumber);
                         } else {
                             // TODO: deal with folder creation error
                         }
