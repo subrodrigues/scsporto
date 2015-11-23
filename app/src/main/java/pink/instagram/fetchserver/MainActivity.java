@@ -52,6 +52,7 @@ import pink.instagram.fetchserver.instagram.ImageResponse;
 import pink.instagram.fetchserver.instagram.InstagramAPI;
 import pink.instagram.fetchserver.models.Image;
 import pink.instagram.fetchserver.tinydb.TinyDB;
+import pink.instagram.fetchserver.utils.NetworkUtils;
 import pink.instagram.fetchserver.variables.Variables;
 
 /**
@@ -60,6 +61,8 @@ import pink.instagram.fetchserver.variables.Variables;
 public class MainActivity extends AppCompatActivity {
 
     public static final int INSTAGRAM_QUERY_PERIOD = 30000;
+    private static final String TAG = "MainActivity";
+
     /**
      * Represents a response from Instagram API
      */
@@ -120,13 +123,19 @@ public class MainActivity extends AppCompatActivity {
 
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View view) {
+            public void onClick(final View view) {
                 Snackbar.make(view, "Fetching Instragram Server", Snackbar.LENGTH_LONG)
                         .setAction("Action", null).show();
 
                 if (!isRunning) {
                     TimerTask task = new TimerTask() {
                         public void run() {
+                            if(!NetworkUtils.isConnected(MainActivity.this)) {
+                                Log.e(TAG, "Cannot refresh data with no connectivity. Will try again in " + INSTAGRAM_QUERY_PERIOD + " milliseconds.");
+                                Snackbar.make(view, "No connectivity available to fetch Instagram.", Snackbar.LENGTH_LONG).show();
+                                return;
+                            }
+
                             new GetImagesInstagram().execute(Variables.DEFAULT_TAG);
                             isRunning = true;
                         }
