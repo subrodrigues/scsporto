@@ -42,6 +42,8 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_below="@+id/selectAccount"
+        android:background="#25000000"
         android:scrollbars="vertical"
+        android:padding="10dp"
         android:textSize="8sp" />
 </RelativeLayout>

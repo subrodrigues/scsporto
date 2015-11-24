@@ -135,7 +135,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(final View view) {
                 if (!isRunning) {
-                    Snackbar.make(view, "Fetching Instragram Server", Snackbar.LENGTH_LONG)
+                    Snackbar.make(view, "Fetching Instagram Server", Snackbar.LENGTH_LONG)
                             .setAction("Action", null).show();
                     printLog(LOGTYPE.INFO, "Server started");
 
@@ -361,7 +361,7 @@ public class MainActivity extends AppCompatActivity {
 
                             //   MainActivity.getUploadedImageIDs().add(images[index].getId());
                             tinydb.putString(images[this.index].getId(), images[this.index].getId());
-                            uploadNewImageInfo(images[this.index]);
+                            firebaseUploadNewImageInfo(images[this.index]);
 
                             printLog(LOGTYPE.DEBUG, "Image saved with SUCCESS at " + file.getAbsolutePath());
 
@@ -395,7 +395,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void uploadNewImageInfo(Image image) {
+    private void firebaseUploadNewImageInfo(Image image) {
         if(image != null && image.getCaption() != null && image.getCaption().getFrom() != null &&
                 image.getCaption().getFrom().getUsername() != null &&
                 image.getURLs() != null && image.getURLs().getStandardResolution() != null &&
@@ -485,7 +485,7 @@ public class MainActivity extends AppCompatActivity {
             PhotoEntry pe = new PhotoEntry(entry);
             photos.add(pe);
         }
-        printLog(LOGTYPE.ERROR, "Album {} has {} photos" + album.getName()+ photos.size());
+        printLog(LOGTYPE.ERROR, "Album {} has {} photos" + album.getName() + photos.size());
         return photos;
     }
 
