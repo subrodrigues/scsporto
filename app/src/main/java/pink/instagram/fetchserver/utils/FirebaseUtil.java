@@ -12,10 +12,14 @@ import com.firebase.client.ValueEventListener;
 import java.util.ArrayList;
 
 /**
+ *
  * Created by Jorge on 23/11/2015.
- */
+ *
+ **/
 public class FirebaseUtil {
-    private static final String firebaseRootURL = "https://gdgsummit2015.firebaseio.com";
+    private static final String FIREBASE_ROOT_URL = "https://gdgsummit2015.firebaseio.com";
+    private static final boolean SHOW_FIREBASE_LOG = true;
+    private static final String TAG = "scsporto.firebase";
     private static FirebaseUtil singleton;
     private Firebase summitFirebase;
 
@@ -23,8 +27,7 @@ public class FirebaseUtil {
      * lets keep this private, shall we?
      * */
     private FirebaseUtil(){
-        summitFirebase = new Firebase(firebaseRootURL);
-        registerFirebaseListener();
+        summitFirebase = new Firebase(FIREBASE_ROOT_URL);
     }
 
     public static FirebaseUtil getInstance(Context applicationContext) {
@@ -43,18 +46,24 @@ public class FirebaseUtil {
                 SummitUserFirebaseUserModel userModel = null;
                 for (DataSnapshot dataSnapshot : snapshot.getChildren()) {
                     DataSnapshot userSnapshot = dataSnapshot.child(username);
-                    userModel = userSnapshot.getValue(SummitUserFirebaseUserModel.class);
+                    try {
+                        userModel = userSnapshot.getValue(SummitUserFirebaseUserModel.class);
+                    } catch (FirebaseException exception) {
+                        if (SHOW_FIREBASE_LOG) {
+                            Log.i(TAG, "onDataChange wrong data type", exception);
+                        }
+                    }
                 }
                 if (userModel == null) {
                     userModel = new SummitUserFirebaseUserModel();
                     userModel.username = username;
                     userModel.numberOfPhotos = 0;
-                    userModel.photosURLs = new ArrayList<String>();
+                    userModel.photosURLs = new ArrayList<>();
                 }
 
                 userModel.numberOfPhotos++;
 
-                ArrayList<String> newURLsList = new ArrayList<String>();
+                ArrayList<String> newURLsList = new ArrayList<>();
 
                 newURLsList.addAll(userModel.getPhotosURLs());
                 newURLsList.add(photoUrl);
@@ -68,36 +77,6 @@ public class FirebaseUtil {
 
             }
         });
-    }
-
-    private void registerFirebaseListener() {
-        Log.i("GNGTV", "Data changed");
-        summitFirebase.addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot snapshot) {
-                Log.i("GNGTV", "Data changed");
-                try {
-                    SummitUserFirebaseModel userInfo = snapshot.getValue(SummitUserFirebaseModel.class);
-                    Log.i("GNGTV", "There is a user: " + Boolean.toString(userInfo != null));
-                    if (userInfo != null) {
-
-                    }
-                    //else
-                    //mCallback.error???
-                } catch (FirebaseException fe) {
-                    Log.e("GNGTV", "Error while parsing firebase snapshot.", fe);
-                }
-            }
-
-            @Override
-            public void onCancelled(FirebaseError firebaseError) {
-                Log.i("GNGTV", "Error:" + firebaseError.getMessage());
-            }
-        });
-    }
-
-    public static class SummitUserFirebaseModel {
-        public SummitUserFirebaseUserModel users;
     }
 
     public static class SummitUserFirebaseUserModel {
