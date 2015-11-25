@@ -20,6 +20,10 @@ public class ImageResponse {
         public String getNextURL() {
             return next_url;
         }
+
+        public String getNextMaxId(){
+            return next_max_id;
+        }
     }
 
     public class Meta{
@@ -41,4 +45,6 @@ public class ImageResponse {
     public Meta getMeta(){
         return meta;
     }
+
+
 }

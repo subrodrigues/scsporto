@@ -40,12 +40,15 @@ public class FirebaseUtil {
     }
 
     public void addUserphoto(final String username, final String photoUrl) {
+
+        final String escapedUsername = username.replaceAll("[^a-zA-Z0-9]+","");
+
         summitFirebase.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot snapshot) {
                 SummitUserFirebaseUserModel userModel = null;
                 for (DataSnapshot dataSnapshot : snapshot.getChildren()) {
-                    DataSnapshot userSnapshot = dataSnapshot.child(username);
+                    DataSnapshot userSnapshot = dataSnapshot.child(escapedUsername);
                     try {
                         userModel = userSnapshot.getValue(SummitUserFirebaseUserModel.class);
                     } catch (FirebaseException exception) {
@@ -56,7 +59,7 @@ public class FirebaseUtil {
                 }
                 if (userModel == null) {
                     userModel = new SummitUserFirebaseUserModel();
-                    userModel.username = username;
+                    userModel.username = escapedUsername;
                     userModel.numberOfPhotos = 0;
                     userModel.photosURLs = new ArrayList<>();
                 }
@@ -69,7 +72,7 @@ public class FirebaseUtil {
                 newURLsList.add(photoUrl);
                 userModel.photosURLs = newURLsList;
 
-                summitFirebase.child("users").child(username).setValue(userModel);
+                summitFirebase.child("users").child(escapedUsername).setValue(userModel);
             }
 
             @Override
@@ -93,7 +96,7 @@ public class FirebaseUtil {
         }
 
         public void setUsername(String username) {
-            this.username = username;
+            this.username = username.replaceAll("[^a-zA-Z0-9]+","");
         }
 
         public int getNumberOfPhotos() {

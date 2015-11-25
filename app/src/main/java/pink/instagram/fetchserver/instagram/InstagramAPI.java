@@ -43,6 +43,8 @@ public class InstagramAPI {
                 get = new HttpGet(url);
             }
 
+            Log.d("Instagram", "URL: " + get.getURI().toString());
+
             HttpResponse response = client.execute(get);
             HttpEntity entity = response.getEntity();
             if (entity != null) {

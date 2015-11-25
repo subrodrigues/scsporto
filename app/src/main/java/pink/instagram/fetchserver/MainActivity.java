@@ -17,6 +17,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.text.SpannableString;
 import android.text.Spanned;
+import android.text.TextUtils;
 import android.text.method.ScrollingMovementMethod;
 import android.text.style.ForegroundColorSpan;
 import android.util.Log;
@@ -252,7 +253,7 @@ public class MainActivity extends AppCompatActivity {
                     //    Log.d("NEXT URL:", instagramImageResponse.get(paginationIndex).getPagination().getNextURL());
                     printLog(LOGTYPE.DEBUG, "NUMBER OF IMAGES: " + instagramImageResponse.get(paginationIndex).getImages().length);
 
-                    loadImagesAndSaveToDisk(instagramImageResponse.get(paginationIndex).getImages());
+                  //  loadImagesAndSaveToDisk(instagramImageResponse.get(paginationIndex).getImages());
 
             /*    if(!getUploadedImageIDs().contains( // If last item is not added, get next page
                         instagramImageResponse.get(paginationIndex).getImages()[instagramImageResponse.get(paginationIndex).getImages().length-1]) &&
@@ -260,9 +261,14 @@ public class MainActivity extends AppCompatActivity {
                */
                     // If last item is not added, get next page
                     if (tinydb.getString(instagramImageResponse.get(paginationIndex).getImages()[instagramImageResponse.get(paginationIndex).getImages().length - 1].getId()).isEmpty() &&
-                            instagramImageResponse.get(paginationIndex).getPagination().getNextURL() != null) {
-                        new GetNextImagesInstagram().execute(instagramImageResponse.get(paginationIndex).getPagination().getNextURL());
+                            instagramImageResponse.get(paginationIndex).getPagination().getNextURL() != null
+                            && !TextUtils.isEmpty(instagramImageResponse.get(paginationIndex).getPagination().getNextMaxId())) {
+
+                            new GetNextImagesInstagram().execute(instagramImageResponse.get(paginationIndex).getPagination().getNextURL());
                     }
+
+                    else
+                        loadImagesAndSaveToDisk(instagramImageResponse);
 
                 } else {
                     printLog(LOGTYPE.DEBUG, "NULL FRAG");
@@ -290,16 +296,19 @@ public class MainActivity extends AppCompatActivity {
 
             if(result.getMeta().getCode() == 200){
 
-                loadImagesAndSaveToDisk(instagramImageResponse.get(paginationIndex).getImages());
+
 
            //     if(!getUploadedImageIDs().contains( // If last item is not added, get next page
            //             instagramImageResponse.get(paginationIndex).getImages()[instagramImageResponse.get(paginationIndex).getImages().length-1])){
 
                 // If last item is not added, get next page
-                    if(tinydb.getString(instagramImageResponse.get(paginationIndex).getImages()[instagramImageResponse.get(paginationIndex).getImages().length-1].getId()).isEmpty()){
+                    if(tinydb.getString(instagramImageResponse.get(paginationIndex).getImages()[instagramImageResponse.get(paginationIndex).getImages().length-1].getId()).isEmpty() &&
+                            !TextUtils.isEmpty(instagramImageResponse.get(paginationIndex).getPagination().getNextMaxId())){
+                            new GetNextImagesInstagram().execute(instagramImageResponse.get(paginationIndex).getPagination().getNextURL());
+                    }
 
-                    new GetNextImagesInstagram().execute(instagramImageResponse.get(paginationIndex).getPagination().getNextURL());
-                }
+                else
+                        loadImagesAndSaveToDisk(instagramImageResponse);
 
             }
             else {
@@ -309,9 +318,10 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    public void loadImagesAndSaveToDisk(final Image[] images){
+    public void loadImagesAndSaveToDisk(Vector<ImageResponse> images){
 
-        new DownloadFilesAndSaveToCardTask(images, 0).execute(0);
+        for(int i = 0; i < images.size(); i++)
+        new DownloadFilesAndSaveToCardTask(images.get(i).getImages(), 0).execute(0);
 
     }
 
@@ -537,6 +547,11 @@ public class MainActivity extends AppCompatActivity {
 
                                     if(myAlbum.getTitle().getPlainText().equals(ALBUM_TO_UPLOAD)) {
                                         album = myAlbum;
+
+                                        boolean success = true;
+                                        if (!folder.exists()) {
+                                            success = folder.mkdir();
+                                        }
 
                                         ArrayList<File> localPhotos = getListFiles(folder);
 
