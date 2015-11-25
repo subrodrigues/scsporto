@@ -240,33 +240,36 @@ public class MainActivity extends AppCompatActivity {
         // Save data and fill structures
         @Override
         protected void onPostExecute(ImageResponse result) {
+
             instagramImageResponse.clear();
             paginationIndex = 0;
 
             instagramImageResponse.add(result);
 
-            if(result.getMeta().getCode() == 200) {
-            //    Log.d("NEXT URL:", instagramImageResponse.get(paginationIndex).getPagination().getNextURL());
-                printLog(LOGTYPE.DEBUG, "NUMBER OF IMAGES: " + instagramImageResponse.get(paginationIndex).getImages().length);
+            if(instagramImageResponse != null && instagramImageResponse.size() > 0 && instagramImageResponse.get(paginationIndex) != null && instagramImageResponse.get(paginationIndex).getImages() != null &&
+                    instagramImageResponse.get(paginationIndex).getImages().length > 0) {
+                if (result.getMeta().getCode() == 200) {
+                    //    Log.d("NEXT URL:", instagramImageResponse.get(paginationIndex).getPagination().getNextURL());
+                    printLog(LOGTYPE.DEBUG, "NUMBER OF IMAGES: " + instagramImageResponse.get(paginationIndex).getImages().length);
 
-                loadImagesAndSaveToDisk(instagramImageResponse.get(paginationIndex).getImages());
+                    loadImagesAndSaveToDisk(instagramImageResponse.get(paginationIndex).getImages());
 
             /*    if(!getUploadedImageIDs().contains( // If last item is not added, get next page
                         instagramImageResponse.get(paginationIndex).getImages()[instagramImageResponse.get(paginationIndex).getImages().length-1]) &&
                         instagramImageResponse.get(paginationIndex).getPagination().getNextURL() != null){
                */
-                // If last item is not added, get next page
-                if(tinydb.getString(instagramImageResponse.get(paginationIndex).getImages()[instagramImageResponse.get(paginationIndex).getImages().length-1].getId()).isEmpty() &&
-                        instagramImageResponse.get(paginationIndex).getPagination().getNextURL() != null){
-                    new GetNextImagesInstagram().execute(instagramImageResponse.get(paginationIndex).getPagination().getNextURL());
-                }
+                    // If last item is not added, get next page
+                    if (tinydb.getString(instagramImageResponse.get(paginationIndex).getImages()[instagramImageResponse.get(paginationIndex).getImages().length - 1].getId()).isEmpty() &&
+                            instagramImageResponse.get(paginationIndex).getPagination().getNextURL() != null) {
+                        new GetNextImagesInstagram().execute(instagramImageResponse.get(paginationIndex).getPagination().getNextURL());
+                    }
 
-            } else {
-                printLog(LOGTYPE.DEBUG, "NULL FRAG");
-                // TODO: deal with it
+                } else {
+                    printLog(LOGTYPE.DEBUG, "NULL FRAG");
+                    // TODO: deal with it
+                }
             }
         }
-
     }
 
     /**

@@ -7,7 +7,7 @@ package pink.instagram.fetchserver.variables;
  */
 public class Variables {
 
-    /** https://api.instagram.com/v1/tags/caladowedding/media/recent?client_id=bc24f77d7c304e93badf0c01073f6df9
+    /** https://api.instagram.com/v1/tags/scsportoteste2015/media/recent?client_id=bc24f77d7c304e93badf0c01073f6df9
      * Instagram related variables
      */
     public static final int NUMBER_IMAGES = 30;
@@ -15,6 +15,6 @@ public class Variables {
     public static final String INSTAGRAM_URL_CLIENT = "/media/recent?client_id=";
     public static final String INSTAGRAM_COUNT = "&count=";
     public static final int LOAD_MORE_IMAGES_THRESHOLD = 5;
-    public static final String DEFAULT_TAG = "caladowedding";
+    public static final String DEFAULT_TAG = "scsportoteste2015";
 
 }
